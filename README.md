@@ -1,7 +1,7 @@
 # GELFE
 Generalized Extended Learning Feature Engineering
 
- Download data
+ --- Download data ---
  
  DataDL & kNN_Impute 
  
@@ -10,7 +10,7 @@ Generalized Extended Learning Feature Engineering
  In order to download the data. For all manual necessary changes and to see which final data sets should be kept, see the thesis
  
 
- Training Phase
+ --- Training Phase ---
  
  MainTrain, DataSetTrainV2, OperatorsV2, MetaFeature & MetaModel
  
@@ -19,7 +19,7 @@ Generalized Extended Learning Feature Engineering
  Afterward, run MetaModel to create metamodels
  
 
- Feature Engineering & Evaluation Phase
+ --- Feature Engineering & Evaluation Phase ---
  
  TPOTAutoML, MainAutoFE, OperatorsFE, MetaFeature, CMI & entropy_estimators
  
@@ -28,6 +28,6 @@ Generalized Extended Learning Feature Engineering
  For the selection method, CMI & entropy_estimators are the used files.
 
 
- Create graphs and all results
+ --- Create graphs and all results ---
  
  TPOT_Results
