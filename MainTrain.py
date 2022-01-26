@@ -21,8 +21,11 @@ from OperatorsV2 import NumCat
 import DataSetTrainV2
 
 loc = r'C:\OneDrive - Building Blocks\Thesis\Data\OpenML\TrainingPhase'
+loc = r'C:\Users\Casper\Dropbox\MSc\BA&QM\Thesis\Data\OpenML\TrainingPhase'
+locsmall = r'C:\OneDrive - Building Blocks\Thesis\Data\OpenML\TooSmallLess500'
 
-csvfiles = glob.glob(os.path.join(loc, '*.csv'))[89:]
+csvfiles = glob.glob(os.path.join(loc, '*.csv'))[150:]
+5/0
 
 Num_names = [method for method in dir(Numerical()) if callable(getattr(Numerical(), method)) if not method.startswith('_')]
 Num_dict = {key: pd.DataFrame() for key in Num_names}
@@ -37,13 +40,21 @@ dicts = {'Num': Num_dict, 'Cat': Cat_dict, 'NumNum': NumNum_dict, 'NumCat': NumC
 
 #dicts = np.load('meta_data.npy').item()
 
+#data = csvfiles[9]
+#df = pd.read_csv(data,index_col='Unnamed: 0')
+#start = time()
+#dicts = DataSetTrain.Train(df,dicts)
+#print(time() - start)
+
 for data in csvfiles:
-    file = open("results.txt","a")
+    file = open("results_lap4.txt","a")
+    #file = open("results100.txt","a")
     print(data)
     start = time()
     df = pd.read_csv(data,index_col='Unnamed: 0')
     dicts = DataSetTrainV2.Train(df,dicts)
-    np.save('meta_data.npy', dicts)
+    #np.save('meta_data_100.npy', dicts)
+    np.save('meta_data_lap4.npy', dicts)
     print(time() - start)
     file.write(data[70:]+" "+str(time() - start)+"\n")
     file.close()

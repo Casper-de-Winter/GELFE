@@ -4,7 +4,7 @@ Created on Wed May  1 09:56:37 2019
 
 @author: casper
 """
-
+5/0
 import pandas as pd
 import numpy as np
 import warnings

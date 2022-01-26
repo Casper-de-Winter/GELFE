@@ -63,6 +63,29 @@ def create_model(df):
     '''
     return rs.best_estimator_
 
+def create_model_bin(df):
+    y = df['y'].values
+    X = df.drop('y', 1).values
+    print(np.mean(y))
+    
+    param_grid = {"max_depth": [3, 5, 10, None],
+                  "max_features": [1, 5, 10, "sqrt", 0.5],
+                  "min_samples_split": [2, 4, 7, 10],
+                  "bootstrap": [True, False],
+                  "criterion": ["gini", "entropy"],
+                  "min_samples_leaf": [1, 3, 5],
+                  "n_estimators": [199,200,201]}
+    clf = RandomForestClassifier(random_state=8520)
+    skf = StratifiedKFold(n_splits=5,shuffle=True,random_state = 409)
+    
+    #gs = GridSearchCV(clf, param_grid=param_grid, cv=skf, scoring='balanced_accuracy', n_jobs=-1, pre_dispatch=40)
+    #gs.fit(X,y)
+    rs = RandomizedSearchCV(clf, param_distributions=param_grid, n_iter = 50, cv=skf, 
+                            scoring='f1', n_jobs=-1, pre_dispatch=50, random_state=1995)
+    rs.fit(X, y)
+    print(rs.best_score_)
+    return rs.best_estimator_
+
 for op in Num_names:
     print(op)
     df = Num_dict[op]
@@ -97,7 +120,7 @@ for op in NumNum_names:
     df = df.drop('XNum',axis=1)
     df = df.drop('XCat',axis=1)
     start = time()
-    bestmodel = create_model(df)
+    bestmodel = create_model_bin(df)
     print(time() - start)
     NumNum_models[op] = bestmodel
     
@@ -109,7 +132,7 @@ for op in NumCat_names:
     df = df.drop('XNum',axis=1)
     df = df.drop('XCat',axis=1)
     start = time()
-    bestmodel = create_model(df)
+    bestmodel = create_model_bin(df)
     print(time() - start)
     NumCat_models[op] = bestmodel
     

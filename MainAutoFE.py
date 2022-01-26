@@ -25,17 +25,23 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 import bisect
 import random
-from CMI import cife
+from CIFE import cife
 
-def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = False, NofEval = 2, 
-           NofUnary = 10, NofBinary = 15, binaryselect = False,selectfixed = True, NofBinaryTotal = 15):
+'''
+INPUT:
+df = dataframe with one column called 'y', the column to predict. 
+     For all other columns, it should be clear which features are categorical or numerical. 
+     Denote this with "True" for categorical and "False" for numerical features.
+     Examples: Gender_True, Age_False, AgeCategorized_True, Price_False, etc.
+'''
+
+def AutoFE(df, test_size = 0.40, original = False, method = "BestK", binary = True, NofEval = 2, 
+           NofUnary = 10, NofBinary = 10, binaryselect = False, selectoriginal = True, NofBinaryTotal = 15):
     #load a data set and models
     metamodels = np.load('meta_models.npy').item()
     Num_models = metamodels['Num']; NumNum_models = metamodels['NumNum']
     Cat_models = metamodels['Cat']; NumCat_models = metamodels['NumCat']
-    Extra=1
-    if NofEval == 1:
-        Extra=0
+    
     #loc = r'C:\OneDrive - Building Blocks\Thesis\Data\TestData'
     #writeloc = r'C:\OneDrive - Building Blocks\Thesis\Data\TestFiles'
     #csvfiles = glob.glob(os.path.join(loc, '*.csv'))
@@ -137,7 +143,7 @@ def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = Fal
         thres = min(bestprobs)
         for i in XAll:
             bestpreps_i = {}
-            bestprobs_i = list(np.zeros(NofEval+Extra))
+            bestprobs_i = list(np.zeros(NofEval+1))
             thres_i = min(bestprobs_i)
             if i in XNumind:
                 f = X_train[:,i]
@@ -156,7 +162,7 @@ def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = Fal
                     if prob > thres_i:
                         bestprobs_i.append(prob)
                         bestprobs_i.sort(reverse = True)
-                        bestprobs_i=bestprobs_i[:NofEval+Extra]
+                        bestprobs_i=bestprobs_i[:NofEval+1]
                         thres_i = min(bestprobs_i)
                         bestpreps_i[prep] = prob
                         bestpreps_i = {key:val for key, val in bestpreps_i.items() if val >= thres_i}
@@ -181,7 +187,7 @@ def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = Fal
                         if prob > thres_i:
                             bestprobs_i.append(prob)
                             bestprobs_i.sort(reverse = True)
-                            bestprobs_i=bestprobs_i[:NofEval+Extra]
+                            bestprobs_i=bestprobs_i[:NofEval+1]
                             thres_i = min(bestprobs_i)
                             bestpreps_i[prep] = prob
                             bestpreps_i = {key:val for key, val in bestpreps_i.items() if val >= thres_i}
@@ -237,7 +243,7 @@ def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = Fal
         thres = min(bestprobs)
         for i in XAll:
             bestpreps_i = {}
-            bestprobs_i = list(np.zeros(NofEval+Extra))
+            bestprobs_i = list(np.zeros(NofEval+1))
             thres_i = min(bestprobs_i)
             if i in XNumind:
                 f = X_train[:,i]
@@ -256,7 +262,7 @@ def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = Fal
                     if prob > thres_i:
                         bestprobs_i.append(prob)
                         bestprobs_i.sort(reverse = True)
-                        bestprobs_i=bestprobs_i[:NofEval+Extra]
+                        bestprobs_i=bestprobs_i[:NofEval+1]
                         thres_i = min(bestprobs_i)
                         bestpreps_i[prep] = prob
                         bestpreps_i = {key:val for key, val in bestpreps_i.items() if val >= thres_i}
@@ -281,7 +287,7 @@ def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = Fal
                         if prob > thres_i:
                             bestprobs_i.append(prob)
                             bestprobs_i.sort(reverse = True)
-                            bestprobs_i=bestprobs_i[:NofEval+Extra]
+                            bestprobs_i=bestprobs_i[:NofEval+1]
                             thres_i = min(bestprobs_i)
                             bestpreps_i[prep] = prob
                             bestpreps_i = {key:val for key, val in bestpreps_i.items() if val >= thres_i}
@@ -492,7 +498,7 @@ def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = Fal
         if time() - start > TimeNN:
             break
         bestpreps_i = {}
-        bestprobs_i = list(np.zeros(NofEval+Extra))
+        bestprobs_i = list(np.zeros(NofEval+1))
         thres_i = min(bestprobs_i)
         i = subset[0] ; j = subset[1]
         f = X_tr_new[:,i] ; g = X_tr_new[:,j]
@@ -516,7 +522,7 @@ def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = Fal
                 if prob3 > thres_i and prob3 > 0.5:
                     bestprobs_i.append(prob3)
                     bestprobs_i.sort(reverse = True)
-                    bestprobs_i=bestprobs_i[:NofEval+Extra]
+                    bestprobs_i=bestprobs_i[:NofEval+1]
                     bestpreps_i[prep] = prob3
                     thres_i = min(bestprobs_i)
                     bestpreps_i = {key:val for key, val in bestpreps_i.items() if val >= thres_i}
@@ -524,14 +530,14 @@ def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = Fal
                 if prob > thres_i and prob > 0.5:
                     bestprobs_i.append(prob)
                     bestprobs_i.sort(reverse = True)
-                    bestprobs_i=bestprobs_i[:NofEval+Extra]
+                    bestprobs_i=bestprobs_i[:NofEval+1]
                     bestpreps_i[prep] = prob
                     thres_i = min(bestprobs_i)
                     bestpreps_i = {key:val for key, val in bestpreps_i.items() if val >= thres_i}
                 if prob2 > thres_i and prob2 > 0.5:
                     bestprobs_i.append(prob2)
                     bestprobs_i.sort(reverse = True)
-                    bestprobs_i=bestprobs_i[:NofEval+Extra]
+                    bestprobs_i=bestprobs_i[:NofEval+1]
                     prep2 = getattr(NumNum(), op)(j, i, XCatind, XNumind)
                     bestpreps_i[prep2] = prob2
                     thres_i = min(bestprobs_i)
@@ -568,7 +574,7 @@ def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = Fal
             break
         for i in XNumind:
             bestpreps_i = {}
-            bestprobs_i = list(np.zeros(NofEval+Extra))
+            bestprobs_i = list(np.zeros(NofEval+1))
             thres_i = min(bestprobs_i)  
             f = X_tr_new[:,i] ; g = X_tr_new[:,j]
             MetaFeature = MetaNumCat(f,g,1,X_tr_new,y_train,XCatind)
@@ -585,7 +591,7 @@ def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = Fal
                 if prob > thres_i and prob > 0.5:
                     bestprobs_i.append(prob)
                     bestprobs_i.sort(reverse = True)
-                    bestprobs_i=bestprobs_i[:NofEval+Extra]
+                    bestprobs_i=bestprobs_i[:NofEval+1]
                     thres_i = min(bestprobs_i)
                     bestpreps_i[prep] = prob
                     bestpreps_i = {key:val for key, val in bestpreps_i.items() if val >= thres_i}
@@ -635,7 +641,7 @@ def AutoFE(df, test_size = 0.40, original = True, method = "BestK", binary = Fal
         FeatureList[prep.__class__.__name__].extend(list(extra))
     if binaryselect:
         fixed = X_train.shape[1]
-        if selectfixed:
+        if selectoriginal:
             OUT1, _, _ = cife(X_tr_new2, y_train, XNumind, fixed = fixed,n_selected_features = fixed + NofBinaryTotal)
         else:
             OUT1, _, _ = cife(X_tr_new2, y_train, XNumind, fixed = 0,n_selected_features = fixed + NofBinaryTotal)

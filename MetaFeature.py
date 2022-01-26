@@ -9,61 +9,9 @@ from sklearn.preprocessing import KBinsDiscretizer
 import numpy as np
 import scipy as sp
 import pandas as pd
-import warnings
 from scipy.signal import find_peaks
+import warnings
 warnings.filterwarnings("ignore")
-
-def mode(ndarray, axis=0):
-    # Check inputs
-    ndarray = np.asarray(ndarray)
-    ndim = ndarray.ndim
-    if ndarray.size == 1:
-        return (ndarray[0], 1)
-    elif ndarray.size == 0:
-        raise Exception('Cannot compute mode on empty array')
-    try:
-        axis = range(ndarray.ndim)[axis]
-    except:
-        raise Exception('Axis "{}" incompatible with the {}-dimension array'.format(axis, ndim))
-
-    # If array is 1-D and numpy version is > 1.9 numpy.unique will suffice
-    if all([ndim == 1,
-            int(np.__version__.split('.')[0]) >= 1,
-            int(np.__version__.split('.')[1]) >= 9]):
-        modals, counts = np.unique(ndarray, return_counts=True)
-        index = np.argmax(counts)
-        return modals[index], counts[index]
-
-    # Sort array
-    sort = np.sort(ndarray, axis=axis)
-    # Create array to transpose along the axis and get padding shape
-    transpose = np.roll(np.arange(ndim)[::-1], axis)
-    shape = list(sort.shape)
-    shape[axis] = 1
-    # Create a boolean array along strides of unique values
-    strides = np.concatenate([np.zeros(shape=shape, dtype='bool'),
-                                 np.diff(sort, axis=axis) == 0,
-                                 np.zeros(shape=shape, dtype='bool')],
-                                axis=axis).transpose(transpose).ravel()
-    # Count the stride lengths
-    counts = np.cumsum(strides)
-    counts[~strides] = np.concatenate([[0], np.diff(counts[~strides])])
-    counts[strides] = 0
-    # Get shape of padded counts and slice to return to the original shape
-    shape = np.array(sort.shape)
-    shape[axis] += 1
-    shape = shape[transpose]
-    slices = [slice(None)] * ndim
-    slices[axis] = slice(1, None)
-    # Reshape and compute final counts
-    counts = counts.reshape(shape).transpose(transpose)[slices] + 1
-
-    # Find maximum counts and return modals/counts
-    slices = [slice(None, i) for i in sort.shape]
-    del slices[axis]
-    index = np.ogrid[slices]
-    index.insert(axis, np.argmax(counts, axis=axis))
-    return sort[index], counts[index]
 
 def MetaNum(f,MetaTarget,X,y,XCatind):
     meta_f = pd.DataFrame()
@@ -77,9 +25,8 @@ def MetaNum(f,MetaTarget,X,y,XCatind):
     meta_f['max'] = [max(f)]
     meta_f['rangesize'] = [max(f)-min(f)]
     meta_f['posneg'] = [1.0 if max(f)>0 and min(f)<0 else 0.0]
-    tmp1, tmp2 = mode(f)
-    meta_f['mode'] = [tmp1]
-    meta_f['modefreq'] = [tmp2/len(f)]
+    meta_f['mode'] = [sp.stats.mode(f)[0][0]]
+    meta_f['modefreq'] = [sp.stats.mode(f)[1][0]/len(f)]
     
     kbd = KBinsDiscretizer(encode = 'ordinal', strategy = 'uniform', n_bins = 10).fit(f.reshape(-1,1))
     q = kbd.transform(f.reshape(-1,1))[:,0]
@@ -165,9 +112,8 @@ def MetaNumNum(f,g,MetaTarget,X,y,XCatind):
     meta_f['fmin'] = [min(f)]
     meta_f['fmax'] = [max(f)]
     meta_f['frangesize'] = [max(f)-min(f)]
-    tmp1, tmp2 = mode(f)
-    meta_f['fmode'] = [tmp1]
-    meta_f['fmodefreq'] = [tmp2/len(f)]
+    meta_f['fmode'] = [sp.stats.mode(f)[0][0]]
+    meta_f['fmodefreq'] = [sp.stats.mode(f)[1][0]/len(f)]
     kbd = KBinsDiscretizer(encode = 'ordinal', strategy = 'uniform', n_bins = 10).fit(f.reshape(-1,1))
     one = [f[x] for x in range(0,len(f)) if y[x] == 1]
     zero = [f[x] for x in range(0,len(f)) if y[x] == 0]
@@ -181,7 +127,7 @@ def MetaNumNum(f,g,MetaTarget,X,y,XCatind):
         meta_f['fbinmeanrate'] = [np.mean(one) / (np.mean(zero)+0.00000001)]
     else:
         meta_f['fbinmeanrate'] = [np.mean(zero) / (np.mean(one)+0.00000001)]
-
+    
     meta_f['gmean'] = [g.mean()]
     meta_f['gstd'] = [g.std()]
     meta_f['gskew'] = [sp.stats.skew(g)]
@@ -192,13 +138,12 @@ def MetaNumNum(f,g,MetaTarget,X,y,XCatind):
     meta_f = meta_f.join(pd.DataFrame(
                  [gbins], 
                  index=meta_f.index, 
-                 columns=['gbin1', 'gbin2', 'gbin3','gbin4', 'gbin5']))   
+                 columns=['gbin1', 'gbin2', 'gbin3','gbin4', 'gbin5']))    
     meta_f['gmin'] = [min(g)]
     meta_f['gmax'] = [max(g)]
     meta_f['grangesize'] = [max(g)-min(g)]
-    tmp1, tmp2 = mode(g)
-    meta_f['gmode'] = [tmp1]
-    meta_f['gmodefreq'] = [tmp2/len(g)]
+    meta_f['gmode'] = [sp.stats.mode(g)[0][0]]
+    meta_f['gmodefreq'] = [sp.stats.mode(g)[1][0]/len(g)]
     kbd = KBinsDiscretizer(encode = 'ordinal', strategy = 'uniform', n_bins = 10).fit(g.reshape(-1,1))
     one = [g[x] for x in range(0,len(g)) if y[x] == 1]
     zero = [g[x] for x in range(0,len(g)) if y[x] == 0]
@@ -212,6 +157,7 @@ def MetaNumNum(f,g,MetaTarget,X,y,XCatind):
         meta_f['gbinmeanrate'] = [np.mean(one) / (np.mean(zero)+0.00000001)]
     else:
         meta_f['gbinmeanrate'] = [np.mean(zero) / (np.mean(one)+0.00000001)]
+        
     meta_f['fgcorr'] = [np.corrcoef(f, g)[0][1]]
     if f.mean() > g.mean():
         meta_f['fgmeanrate'] = [f.mean() / (g.mean()+0.00000001)]
@@ -222,6 +168,7 @@ def MetaNumNum(f,g,MetaTarget,X,y,XCatind):
         meta_f['fgstdrate'] = [g.std() / f.std()]
         meta_f['fgrangerate'] = [(meta_f['grangesize'] / meta_f['frangesize'])[0]]
     meta_f['fgmaxdiff'] = [np.abs(ftab.argmax() - gtab.argmax())]
+    
     meta_f['yfcorr'] = [np.abs(np.corrcoef(f, y)[0][1])]
     meta_f['ygcorr'] = [np.abs(np.corrcoef(g, y)[0][1])]
     meta_f['yfreq'] = [max(len(y)-sum(y),sum(y))/len(y)]
@@ -251,9 +198,8 @@ def MetaNumCat(f,g,MetaTarget,X,y,XCatind):
     meta_f['fmax'] = [max(f)]
     meta_f['frangesize'] = [max(f)-min(f)]
     #meta_f['fposneg'] = [1.0 if max(f)>0 and min(f)<0 else 0.0]
-    tmp1, tmp2 = mode(f)
-    meta_f['fmode'] = [tmp1]
-    meta_f['fmodefreq'] = [tmp2/len(f)]
+    meta_f['fmode'] = [sp.stats.mode(f)[0][0]]
+    meta_f['fmodefreq'] = [sp.stats.mode(f)[1][0]/len(f)]
     
     kbd = KBinsDiscretizer(encode = 'ordinal', strategy = 'uniform', n_bins = 10).fit(f.reshape(-1,1))
     one = [f[x] for x in range(0,len(f)) if y[x] == 1]

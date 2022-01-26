@@ -135,7 +135,7 @@ def Train(df,dicts):
             #    continue
             MetaFeature = MetaCat(X[:,i],MetaTarget,X,y,XCatind)
             Cat_dict[op] = Cat_dict[op].append(MetaFeature)
-            
+    '''        
     #All NumNum operators
     for op in NumNum_names:
         #print(op)
@@ -233,5 +233,6 @@ def Train(df,dicts):
                 #    continue
                 MetaFeature = MetaNumCat(X[:,i],X[:,j],MetaTarget,X,y,XCatind)
                 NumCat_dict[op] = NumCat_dict[op].append(MetaFeature)
+    '''
     dicts_new = {'Num': Num_dict, 'Cat': Cat_dict, 'NumNum': NumNum_dict, 'NumCat': NumCat_dict}
     return dicts_new

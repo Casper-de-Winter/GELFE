@@ -42,37 +42,6 @@ class Bench(BaseEstimator, TransformerMixin):
                 X2 = np.column_stack([X2,a])
         X2 = np.delete(X2, todel, axis=1)
         return X2
-    
-class Remove(BaseEstimator, TransformerMixin):
-    def __init__(self, col, XCatind, XNumind):
-        self.col = col
-        self.XCatind = XCatind
-        self.XNumind = XNumind
-        self.Cats = {key: [] for key in XCatind}
-    
-    def fit(self, X, y=None):
-        for i in self.XCatind:
-            self.Cats[i] = list(set(X[:,i]))
-        return self
-    
-    def transform(self, X):
-        X2 = deepcopy(X)
-        todel = []
-        for i in self.XCatind:
-            if len(self.Cats[i]) > 2 and i != self.col:
-                todel.append(i)
-                a=pd.get_dummies(X2[:,i])
-                if len(set(a.columns.tolist())-set(self.Cats[i])) > 0:
-                    a=a.drop(set(a.columns.tolist())-set(self.Cats[i]),axis =1)
-                if len(set(self.Cats[i])-set(a.columns.tolist())) > 0:
-                    for j in range(0,len(self.Cats[i])):
-                        if self.Cats[i][j] not in a.columns.tolist():
-                            a.insert(loc = j, column = self.Cats[i][j], value = 0)
-                a=a.values[:,1:]
-                X2 = np.column_stack([X2,a])
-        todel.append(self.col)
-        X2 = np.delete(X2, todel, axis=1)
-        return X2
 
 class Numerical():
     class Ln(BaseEstimator, TransformerMixin):
